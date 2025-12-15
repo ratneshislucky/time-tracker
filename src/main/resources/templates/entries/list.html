@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::body})}">
+<body>
+<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h2>Time Entries</h2>
+        <a class="btn" th:href="@{/entries/new}">Record Time</a>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Stream</th>
+            <th>Task</th>
+            <th>Duration</th>
+            <th>Notes</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="entry : ${entries}">
+            <td th:text="${entry.entryDate}"></td>
+            <td th:text="${entry.stream.name}"></td>
+            <td th:text="${entry.taskName}"></td>
+            <td th:text="${entry.durationMinutes + 'm'}"></td>
+            <td th:text="${entry.notes}">-</td>
+            <td>
+                <div class="action-buttons">
+                    <a class="btn secondary small" th:href="@{|/entries/${entry.id}/edit|}">Edit</a>
+                    <form th:action="@{|/entries/${entry.id}/delete|}" method="post">
+                        <button type="submit" class="btn secondary small">Delete</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
+

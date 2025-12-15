@@ -1,0 +1,134 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f5f6fa;
+}
+
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: #2f3542;
+    color: #fff;
+}
+
+.top-nav a {
+    color: #dfe4ea;
+    margin-right: 12px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.top-nav a:hover {
+    color: #a4b0be;
+}
+
+.brand {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.content {
+    padding: 20px;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+
+th, td {
+    border: 1px solid #dfe4ea;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background: #f1f2f6;
+}
+
+.form-field {
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-field label {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+    padding: 8px;
+    border: 1px solid #ced6e0;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.actions {
+    margin-top: 12px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 8px 12px;
+    background: #3742fa;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn.secondary {
+    background: #747d8c;
+}
+
+.btn.small {
+    padding: 6px 10px;
+    font-size: 14px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.error {
+    color: #e74c3c;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.tag {
+    padding: 4px 6px;
+    border-radius: 4px;
+    background: #2ed573;
+    color: #fff;
+    font-size: 12px;
+}
+
+.tag.inactive {
+    background: #ced6e0;
+    color: #2f3542;
+}
+
+.card {
+    background: #fff;
+    padding: 16px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+

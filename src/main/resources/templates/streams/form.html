@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::body})}">
+<body>
+<div class="card">
+    <h2>Register Stream</h2>
+    <form th:action="@{/streams}" th:object="${streamForm}" method="post">
+        <div class="form-field">
+            <label for="name">Name</label>
+            <input id="name" type="text" th:field="*{name}" placeholder="e.g. Delivery" required>
+            <div class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+        </div>
+        <div class="form-field">
+            <label for="description">Description</label>
+            <textarea id="description" th:field="*{description}" rows="3"></textarea>
+            <div class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+        </div>
+        <div class="actions">
+            <button type="submit" class="btn">Save</button>
+            <a class="btn secondary" th:href="@{/streams}">Cancel</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>
+

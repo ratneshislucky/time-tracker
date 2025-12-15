@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::body})}">
+<body>
+<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h2>Streams</h2>
+        <a class="btn" th:href="@{/streams/new}">Register Stream</a>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="stream : ${streams}">
+            <td th:text="${stream.name}"></td>
+            <td th:text="${stream.description}">-</td>
+            <td>
+                <span th:classappend="${stream.active} ? 'tag' : 'tag inactive'"
+                      th:text="${stream.active} ? 'Active' : 'Inactive'"></span>
+            </td>
+            <td>
+                <form th:if="${stream.active}" th:action="@{|/streams/${stream.id}/deactivate|}" method="post" style="display:inline;">
+                    <button type="submit" class="btn secondary">Deactivate</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
+

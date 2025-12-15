@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: time_tracker
+      POSTGRES_USER: time_tracker
+      POSTGRES_PASSWORD: time_tracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/time_tracker
+      DB_USER: time_tracker
+      DB_PASSWORD: time_tracker
+    ports:
+      - "8080:8080"
+    command: ["sh", "-c", "java -jar /app/app.jar"]
+volumes:
+  pgdata:
+

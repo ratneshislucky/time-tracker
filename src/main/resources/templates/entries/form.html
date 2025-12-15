@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::body})}">
+<body>
+<div class="card">
+    <h2 th:text="${entryId} != null ? 'Edit Time Entry' : 'Record Time'"></h2>
+    <form th:action="${entryId} != null ? @{|/entries/${entryId}|} : @{/entries}" th:object="${timeEntryForm}" method="post">
+        <div class="form-field">
+            <label for="stream">Stream</label>
+            <select id="stream" th:field="*{streamId}" required>
+                <option value="" disabled th:selected="${timeEntryForm.streamId == null}">Select stream</option>
+                <option th:each="s : ${activeStreams}" th:value="${s.id}" th:text="${s.name}"
+                        th:selected="${s.id == timeEntryForm.streamId}"></option>
+            </select>
+            <div class="error" th:if="${#fields.hasErrors('streamId')}" th:errors="*{streamId}"></div>
+        </div>
+        <div class="form-field">
+            <label for="taskName">Task Name</label>
+            <input id="taskName" type="text" th:field="*{taskName}" required>
+            <div class="error" th:if="${#fields.hasErrors('taskName')}" th:errors="*{taskName}"></div>
+        </div>
+        <div class="form-field">
+            <label for="entryDate">Date</label>
+            <input id="entryDate" type="date" th:field="*{entryDate}" required>
+            <div class="error" th:if="${#fields.hasErrors('entryDate')}" th:errors="*{entryDate}"></div>
+        </div>
+        <div class="form-field">
+            <label for="duration">Duration (minutes)</label>
+            <input id="duration" type="number" min="1" th:field="*{durationMinutes}" required>
+            <div class="error" th:if="${#fields.hasErrors('durationMinutes')}" th:errors="*{durationMinutes}"></div>
+        </div>
+        <div class="form-field">
+            <label>Optional Start/End</label>
+            <div style="display:flex;gap:12px;">
+                <div style="flex:1;">
+                    <label for="startTime">Start</label>
+                    <input id="startTime" type="time" th:field="*{startTime}">
+                </div>
+                <div style="flex:1;">
+                    <label for="endTime">End</label>
+                    <input id="endTime" type="time" th:field="*{endTime}">
+                </div>
+            </div>
+            <div class="error" th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}"></div>
+        </div>
+        <div class="form-field">
+            <label for="notes">Notes</label>
+            <textarea id="notes" th:field="*{notes}" rows="3"></textarea>
+            <div class="error" th:if="${#fields.hasErrors('notes')}" th:errors="*{notes}"></div>
+        </div>
+        <div class="actions">
+            <button type="submit" class="btn">Save Entry</button>
+            <a class="btn secondary" th:href="@{/entries}">Cancel</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>
+

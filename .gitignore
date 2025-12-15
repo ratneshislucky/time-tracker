@@ -1,0 +1,26 @@
+# Maven / Gradle
+/target/
+/build/
+
+# IDEs
+.idea/
+.project
+.classpath
+.settings/
+.factorypath
+*.iml
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Tooling
+.vscode/
+.env
+.env.*
+
+# Local database artifacts
+pgdata/
+

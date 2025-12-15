@@ -1,0 +1,240 @@
+# 2. TRD (Technical Requirements and Design)
+
+## 2.1 Proposed Tech Stack
+
+* Backend: Java 21 (or 17) + Spring Boot (Web, Thymeleaf or REST)
+* Persistence: Spring Data JPA + Flyway (or Liquibase)
+* DB: Postgres 15+
+* UI: Minimal server-rendered pages via Thymeleaf (recommended for speed)
+
+  * Alternative: REST + simple static HTML/JS fetch calls (still minimal)
+
+## 2.2 Architecture Overview
+
+Single process Spring Boot app:
+
+* Presentation layer: Controllers + HTML templates
+* Service layer: Business logic (validation, calculations)
+* Repository layer: JPA repositories
+* Database: Postgres with migrations
+
+No message queues, no external services.
+
+## 2.3 Data Model
+
+### 2.3.1 Tables
+
+#### `streams`
+
+* `id` UUID (PK)
+* `name` VARCHAR(50) NOT NULL
+* `description` VARCHAR(200) NULL
+* `is_active` BOOLEAN NOT NULL DEFAULT TRUE
+* `created_at` TIMESTAMPTZ NOT NULL
+* `updated_at` TIMESTAMPTZ NOT NULL
+
+**Constraints**
+
+* Unique index on `lower(name)`.
+
+#### `time_entries`
+
+* `id` UUID (PK)
+* `stream_id` UUID NOT NULL (FK → streams.id)
+* `task_name` VARCHAR(120) NOT NULL
+* `entry_date` DATE NOT NULL (default current date on UI)
+* `start_time` TIME NULL
+* `end_time` TIME NULL
+* `duration_minutes` INT NOT NULL  (source of truth for analysis in MVP)
+* `notes` TEXT NULL
+* `created_at` TIMESTAMPTZ NOT NULL
+* `updated_at` TIMESTAMPTZ NOT NULL
+
+**Validation rules**
+
+* `duration_minutes >= 1`
+* If both `start_time` and `end_time` are set:
+
+  * If same-day only: require `end_time > start_time` (MVP)
+  * Optionally compute duration and override `duration_minutes` unless user explicitly locks it.
+
+**Rationale**
+
+* Keeping `duration_minutes` as the analysis primitive makes reporting stable and simple.
+* `start_time/end_time` are optional for later enhancements (timer mode).
+
+## 2.4 API / Controller Design
+
+### 2.4.1 Server-rendered (Thymeleaf) endpoints (recommended)
+
+* `GET /streams` – list streams
+
+* `GET /streams/new` – register stream form
+
+* `POST /streams` – create stream
+
+* `POST /streams/{id}/deactivate` – deactivate stream (optional)
+
+* `GET /entries` – list recent entries (optional)
+
+* `GET /entries/new` – record time form
+
+* `POST /entries` – create entry
+
+* `GET /entries/{id}/edit` – edit form
+
+* `POST /entries/{id}` – update entry
+
+* `POST /entries/{id}/delete` – delete entry
+
+* `GET /analysis` – analysis page with filters
+
+* `POST /analysis` or `GET /analysis?start=...&end=...` – results
+
+### 2.4.2 If using REST instead
+
+Create JSON endpoints mirroring the above with DTOs. Keep it simple.
+
+## 2.5 UI Specification (Minimal)
+
+Use a top nav with three buttons:
+
+1. **Register Stream**
+2. **Record Time**
+3. **Analysis**
+
+### 2.5.1 Register Stream Page
+
+Fields:
+
+* Stream Name (required)
+* Description (optional)
+  Buttons:
+* Save
+* Cancel (back to list)
+
+### 2.5.2 Record Time Page
+
+Fields:
+
+* Stream (dropdown of active streams)
+* Task name (text)
+* Date (date picker; default today)
+* Duration (minutes; numeric)
+* Notes (optional)
+  Optional:
+* Start time / End time (hidden behind “Advanced” toggle)
+
+Buttons:
+
+* Save Entry
+
+### 2.5.3 Analysis Page
+
+Inputs:
+
+* Start date (required)
+* End date (required)
+* Optional: Stream filter (dropdown)
+  Outputs:
+* Total minutes + formatted hours/min
+* Table: Stream | Minutes | Hours
+* Table (or expandable sections): Stream → Task | Minutes | Hours
+
+Formatting:
+
+* Convert minutes to `Hh Mm` for readability.
+
+## 2.6 Analysis Query Logic
+
+### Date range interpretation
+
+To avoid ambiguity, define:
+
+* Filter by `entry_date` inclusive:
+
+  * Include entries where `entry_date >= startDate` AND `entry_date <= endDate`
+
+(If you later use timestamps, switch to `[start, end)`.)
+
+### Aggregations
+
+* By stream:
+
+  ```sql
+  SELECT s.name, SUM(e.duration_minutes)
+  FROM time_entries e
+  JOIN streams s ON e.stream_id = s.id
+  WHERE e.entry_date BETWEEN :startDate AND :endDate
+    AND (:streamId IS NULL OR e.stream_id = :streamId)
+  GROUP BY s.name
+  ORDER BY SUM(e.duration_minutes) DESC;
+  ```
+* By stream + task:
+
+  ```sql
+  SELECT s.name, e.task_name, SUM(e.duration_minutes)
+  FROM time_entries e
+  JOIN streams s ON e.stream_id = s.id
+  WHERE e.entry_date BETWEEN :startDate AND :endDate
+    AND (:streamId IS NULL OR e.stream_id = :streamId)
+  GROUP BY s.name, e.task_name
+  ORDER BY s.name, SUM(e.duration_minutes) DESC;
+  ```
+
+## 2.7 Validation and Error Handling
+
+* Stream create:
+
+  * empty name → 400 with form error
+  * duplicate name → 409-like form error
+* Time entry:
+
+  * missing stream/task → form error
+  * duration not positive → form error
+* Analysis:
+
+  * end before start → form error
+
+All errors rendered inline on the same page.
+
+## 2.8 Configuration
+
+`application.yaml`:
+
+* Server port (default 8080)
+* DB connection
+* Flyway enabled
+* Timezone handling (use system timezone; store TIMESTAMPTZ in DB)
+
+## 2.9 Local Deployment
+
+### Option A: Docker Compose (recommended)
+
+* `postgres` container with mounted volume
+* App runs via `./mvnw spring-boot:run`
+
+### Option B: Local Postgres
+
+* Provide SQL to create DB/user.
+
+## 2.10 Testing Requirements
+
+* Unit tests:
+
+  * Stream uniqueness check
+  * Duration validations
+  * Analysis aggregation service
+* Integration tests (optional MVP):
+
+  * Repository tests with Testcontainers Postgres
+
+## 2.11 Future Enhancements (Explicitly not MVP)
+
+* Timer mode (start/switch/stop) generating entries automatically
+* Autocomplete tasks (recent tasks per stream)
+* Export CSV
+* Google Sheets writeback
+* Keyboard shortcuts / single-screen logging kiosk
+
+---

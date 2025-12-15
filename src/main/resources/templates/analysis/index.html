@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::body})}">
+<body>
+<div class="card">
+    <h2>Analysis</h2>
+    <form th:action="@{/analysis}" th:object="${analysisForm}" method="post">
+        <div class="form-field">
+            <label for="startDate">Start Date</label>
+            <input id="startDate" type="date" th:field="*{startDate}" required>
+            <div class="error" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}"></div>
+        </div>
+        <div class="form-field">
+            <label for="endDate">End Date</label>
+            <input id="endDate" type="date" th:field="*{endDate}" required>
+            <div class="error" th:if="${#fields.hasErrors('endDate')}" th:errors="*{endDate}"></div>
+        </div>
+        <div class="form-field">
+            <label for="streamId">Stream (optional)</label>
+            <select id="streamId" th:field="*{streamId}">
+                <option th:value="${null}">All streams</option>
+                <option th:each="s : ${streams}" th:value="${s.id}" th:text="${s.name}"></option>
+            </select>
+        </div>
+        <div class="actions">
+            <button type="submit" class="btn">Run Analysis</button>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="margin-top:16px;" th:if="${result != null}">
+    <h3>Total</h3>
+    <p th:text="${result.totalFormatted()}"></p>
+
+    <h3>By Stream</h3>
+    <div th:if="${#lists.isEmpty(result.byStream()) == false}" style="max-width:900px;">
+        <canvas id="streamChart" height="120"></canvas>
+    </div>
+    <table th:if="${#lists.isEmpty(result.byStream()) == false}">
+        <thead>
+        <tr>
+            <th>Stream</th>
+            <th>Minutes</th>
+            <th>Hours</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${result.byStream()}">
+            <td th:text="${row.streamName()}"></td>
+            <td th:text="${row.totalMinutes()}"></td>
+            <td th:text="${row.formatted()}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <p th:if="${#lists.isEmpty(result.byStream())}">No data for this range.</p>
+
+    <h3 style="margin-top:16px;">By Task</h3>
+    <div th:if="${#lists.isEmpty(result.byStreamTask()) == false}" style="max-width:900px;">
+        <canvas id="taskChart" height="160"></canvas>
+    </div>
+    <table th:if="${#lists.isEmpty(result.byStreamTask()) == false}">
+        <thead>
+        <tr>
+            <th>Stream</th>
+            <th>Task</th>
+            <th>Minutes</th>
+            <th>Hours</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${result.byStreamTask()}">
+            <td th:text="${row.streamName()}"></td>
+            <td th:text="${row.taskName()}"></td>
+            <td th:text="${row.totalMinutes()}"></td>
+            <td th:text="${row.formatted()}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <p th:if="${#lists.isEmpty(result.byStreamTask())}">No task breakdown available.</p>
+</div>
+
+<script th:if="${result != null}" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:if="${result != null}" th:inline="javascript">
+    /*<![CDATA[*/
+    const streamLabels = [[${result.byStream().![streamName()]}]];
+    const streamValues = [[${result.byStream().![totalMinutes()]}]];
+    const taskLabels = [[${result.byStreamTask().![streamName() + ' – ' + taskName()]}]];
+    const taskValues = [[${result.byStreamTask().![totalMinutes()]}]];
+
+    if (streamLabels.length > 0 && document.getElementById('streamChart')) {
+        const ctx = document.getElementById('streamChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: streamLabels,
+                datasets: [{
+                    label: 'Minutes by Stream',
+                    data: streamValues,
+                    backgroundColor: 'rgba(55, 66, 250, 0.4)',
+                    borderColor: 'rgba(55, 66, 250, 0.9)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Minutes' } }
+                }
+            }
+        });
+    }
+
+    if (taskLabels.length > 0 && document.getElementById('taskChart')) {
+        const ctx2 = document.getElementById('taskChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: taskLabels,
+                datasets: [{
+                    label: 'Minutes by Task',
+                    data: taskValues,
+                    backgroundColor: 'rgba(46, 213, 115, 0.35)',
+                    borderColor: 'rgba(46, 213, 115, 0.9)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return ctx.parsed.y + ' minutes';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Minutes' } },
+                    x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 20 } }
+                }
+            }
+        });
+    }
+    /*]]>*/
+</script>
+</body>
+</html>
+
