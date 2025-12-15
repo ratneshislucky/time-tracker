@@ -23,4 +23,5 @@
 
 # Local database artifacts
 pgdata/
+docs/
 
